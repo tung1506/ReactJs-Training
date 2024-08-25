@@ -1,7 +1,8 @@
 import React, { Component, Fragment } from 'react';
 import { connect } from 'react-redux';
-import { fetchLoading, setPage } from '../actions/actions';
+import { fetchLoading } from '../actions/actions';
 import PropTypes from 'prop-types';
+import Pagination from './Pagination';
 
 class ProductList extends Component {
     componentDidMount() {
@@ -14,16 +15,8 @@ class ProductList extends Component {
         }
     }
 
-    handleNext = () => {
-        this.props.setPage(this.props.currentPage + 1);
-    };
-
-    handleBack = () => {
-        this.props.setPage(this.props.currentPage - 1);
-    };
-
     render() {
-        const { loading, data, error, currentPage } = this.props;
+        const { loading, data, error, currentPage, totalPages, setPage } = this.props;
 
         if (loading) return <p>Loading...</p>;
         if (error) return <p>Error: {error}</p>;
@@ -40,8 +33,11 @@ class ProductList extends Component {
                             </li>
                         ))}
                     </ul>
-                    <button onClick={this.handleBack} disabled={currentPage === 1}>Back</button>
-                    <button onClick={this.handleNext} >Next</button>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        setPage={setPage}
+                    />
                 </div>
             </Fragment>
         );
@@ -69,12 +65,8 @@ const mapStateToProps = (state) => ({
     loading: state.products.loading,
     data: state.products.data,
     error: state.products.error,
-    currentPage: state.products.currentPage,
+    currentPage: state.pagination.currentPage,
+    totalPages: state.pagination.totalPages,
 });
 
-const mapDispatchToProps = {
-    fetchLoading,
-    setPage,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProductList);
+export default connect(mapStateToProps, { fetchLoading })(ProductList);
