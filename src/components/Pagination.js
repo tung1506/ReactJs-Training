@@ -2,13 +2,14 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { setPage } from '../actions/actions';
+import { bindActionCreators } from 'redux';
 
 class Pagination extends Component {
     handleNext = () => {
-        const { currentPage, totalPages, setPage } = this.props;
-        if (currentPage < totalPages) {
-            this.setPage(currentPage + 1);
-        }
+        const { currentPage, setPage } = this.props;
+
+        setPage(currentPage + 1);
+
     };
 
     handleBack = () => {
@@ -22,7 +23,7 @@ class Pagination extends Component {
         const { currentPage, totalPages } = this.props;
 
         return (
-            <div>
+            <div className="pagination">
                 <button onClick={this.handleBack} disabled={currentPage === 1}>Back</button>
                 <button onClick={this.handleNext} disabled={currentPage === totalPages}>Next</button>
             </div>
@@ -41,8 +42,9 @@ const mapStateToProps = (state) => ({
     totalPages: state.pagination.totalPages,
 });
 
-const mapDispatchToProps = {
-    setPage,
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({
+        setPage,
+    }, dispatch);
 };
-
 export default connect(mapStateToProps, mapDispatchToProps)(Pagination);

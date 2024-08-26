@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { fetchLoading } from '../actions/actions';
 import PropTypes from 'prop-types';
 import Pagination from './Pagination';
+import { bindActionCreators } from 'redux';
 
 class ProductList extends Component {
     componentDidMount() {
@@ -23,13 +24,15 @@ class ProductList extends Component {
 
         return (
             <Fragment>
-                <div>
-                    <ul>
+                <div className="container">
+                    <ul className="product-list">
                         {data.map((product, index) => (
                             <li key={index}>
                                 <img src={product.image} alt={product.name} />
-                                <h3>{product.name}</h3>
-                                <p>{product.price}</p>
+                                <div>
+                                    <h3>{product.name}</h3>
+                                    <p>{product.price}</p>
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -69,4 +72,10 @@ const mapStateToProps = (state) => ({
     totalPages: state.pagination.totalPages,
 });
 
-export default connect(mapStateToProps, { fetchLoading })(ProductList);
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({
+        fetchLoading,
+    }, dispatch);
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProductList);

@@ -1,35 +1,44 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
-import { fetchSuccess, fetchFail } from '../actions/actions';
-import { FETCH_LOADING } from '../constants/constants';
+import { of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
+import { fetchItemsSuccess, fetchItemsFailure, FETCH_ITEMS_REQUEST } from '../actions/actions';
 
-function FetchProductsEpic(action$) {
-    return action$.ofType(FETCH_LOADING)
-        .switchMap(() =>
-            Observable.from(
-                fetch('/test.json').then(response => {
-                    const contentType = response.headers.get('Content-Type');
-
-                    return response.text().then(text => {
-                        if (response.ok) {
-                            if (contentType && contentType.includes('application/json')) {
-                                return JSON.parse(text);
-                            } else {
-                                throw new Error('Unexpected content type');
-                            }
-                        } else {
-                            throw new Error('Network response was not ok.');
+function fetchItemsEpic(action$) {
+    return action$.ofType(FETCH_ITEMS_REQUEST).pipe(
+        switchMap(() =>
+            new Promise((resolve, reject) => {
+                const session = localStorage.getItem('session');
+                fetch(`/test/${session}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            reject(new Error('Network response was not ok.'));
                         }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!Array.isArray(data)) {
+                            reject(new Error('Unexpected response format'));
+                        }
+                        // Assuming that each item in the array is a string
+                        data.forEach(item => {
+                            if (typeof item !== 'string') {
+                                reject(new Error('Invalid item data'));
+                            }
+                        });
+                        resolve(fetchItemsSuccess(data)); // Resolve the promise with successful action
+                    })
+                    .catch(error => {
+                        reject(error);
                     });
-                })
+            }).then(
+                result => result,            // On successful resolution
+                error => fetchItemsFailure(error.message) // On rejection
             )
-                .map(response => fetchSuccess(response))
-                .catch(error => Observable.of(fetchFail(error.message)))
-        );
+        ),
+        catchError(() => {
+            // Handle any unexpected errors
+            return of(fetchItemsFailure('An unexpected error occurred.'));
+        })
+    );
 }
 
-export default FetchProductsEpic;
+export default fetchItemsEpic;
